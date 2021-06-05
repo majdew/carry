@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path/path.dart' as pth;
 
 import 'package:firebase_storage/firebase_storage.dart';
@@ -25,6 +26,7 @@ class _DriverRegistrationFormState extends State<DriverRegistrationForm> {
   String carAssuranceLink = "";
   String carLicenseLink = "";
   String driverLicenseLink = "";
+  dynamic document;
 
   @override
   Widget build(BuildContext context) {
@@ -274,6 +276,15 @@ class _DriverRegistrationFormState extends State<DriverRegistrationForm> {
                                   child: const Text('Car License'),
                                 ),
                               ),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    pickFile('profilePicture');
+                                  },
+                                  child: const Text('profilePicture'),
+                                ),
+                              ),
                             ],
                           ),
                           isActive: _currentStep >= 0,
@@ -304,15 +315,12 @@ class _DriverRegistrationFormState extends State<DriverRegistrationForm> {
   }
 
   continued() async {
-
     // Code to upload image and adding information to firebase
     if (_currentStep == 2) {
       await Firebase.initializeApp();
       _formKey.currentState?.save();
 
       if (_formKey.currentState!.validate()) {
-        Map<String, dynamic> fileUrls = {};
-
         pickedFiles.forEach((element) async {
           final file = File(element[1]);
           var documentType = element[0];
@@ -323,17 +331,16 @@ class _DriverRegistrationFormState extends State<DriverRegistrationForm> {
               FirebaseStorage.instance.ref().child(destination);
 
           await storageReference.putFile(file).whenComplete(
-            () async {
-              await storageReference.getDownloadURL().then((fileUrl) {
+            () {
+              storageReference.getDownloadURL().then((fileUrl) {
                 var url = fileUrl.toString();
-                fileUrls.putIfAbsent("$documentType", () => url);
-
-                print(fileUrls);
+                Drivers().updateDriver({'$documentType': url}, document.id);
               });
             },
           );
         });
 
+        print('hi');
         DriverInfo driver = DriverInfo(
           _formKey.currentState?.fields['firstName']?.value,
           _formKey.currentState?.fields['lastName']?.value,
@@ -344,11 +351,9 @@ class _DriverRegistrationFormState extends State<DriverRegistrationForm> {
           _formKey.currentState?.fields['carModelYear']?.value,
           _formKey.currentState?.fields['model']?.value,
           _formKey.currentState?.fields['carType']?.value,
-          "fileUrls['driverLicenseLink']",
-          "fileUrls['carAssuranceLink']",
-          "fileUrls['carAssuranceLink']",
         );
-        await Drivers().addDriver(driver);
+        document = await Drivers().addDriver(driver);
+        pickedFiles.clear();
 
         _formKey.currentState?.reset();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -374,15 +379,11 @@ class _DriverRegistrationFormState extends State<DriverRegistrationForm> {
   }
 
   pickFile(String documentType) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      allowMultiple: false,
-    );
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
 
-    print(result);
     if (result == null) return;
 
     final path = result.files.single.path!;
     pickedFiles.add([documentType, path]);
-    print(documentType + "\n");
   }
 }
