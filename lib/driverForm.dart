@@ -320,7 +320,7 @@ class _DriverRegistrationFormState extends State<DriverRegistrationForm> {
       await Firebase.initializeApp();
       _formKey.currentState?.save();
 
-      if (_formKey.currentState!.validate()) {
+      if (true) {
         pickedFiles.forEach((element) async {
           final file = File(element[1]);
           var documentType = element[0];
@@ -383,7 +383,7 @@ class _DriverRegistrationFormState extends State<DriverRegistrationForm> {
 
     if (result == null) return;
 
-    final path = result.files.single.path!;
+    final path = result.files.single.path;
     pickedFiles.add([documentType, path]);
   }
 }

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import './driverForm.dart';
+import './dform.dart';
 
+import './PushNotificationService.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
- 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  PushNotificationService.initilize();
+  PushNotificationService.getDeviceToken();
 
   runApp(MyApp());
 }
@@ -30,7 +36,7 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: DriverRegistrationForm(),
+      home: DriverRegistration(),
     );
   }
 }
